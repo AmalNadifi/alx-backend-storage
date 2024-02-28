@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """The following script contains the class definition for redis cache
 """
 import redis
