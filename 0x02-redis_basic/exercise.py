@@ -43,7 +43,9 @@ def call_history(method: Callable) -> Callable:
     """
     key = method.__qualname__
     inputs = key + ":inputs"
-    outputs = key + ":outputs"                                                                                                                                                                                                                            @wraps(method)
+    outputs = key + ":outputs"
+
+    @wraps(method)
     def wrapper(self, *args, **kwargs):
         """
         Wrapper function for the decorated function
@@ -61,8 +63,8 @@ def call_history(method: Callable) -> Callable:
 
 
     return wrapper
-    
-    
+
+
 def replay(method: Callable) -> None:
 """
 Replays the history of a function
@@ -95,7 +97,7 @@ this class defines methods to handle redis cache operations
         """
         self._redis = redis.Redis()
         self._redis.flushdb()
-        
+
     @count_calls
     @call_history
     def store(self, data: Union[str, bytes, int, float]) -> str:
