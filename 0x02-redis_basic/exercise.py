@@ -64,59 +64,63 @@ def call_history(method: Callable) -> Callable:
     return wrapper
 
 
-def replay(method: Callable) -> None:
-"""
-Replays the history of a function
-Args:
-    method: The function to be decorated
-Returns:
-None
-"""
-name = method.__qualname__
-cache = redis.Redis()
-calls = cache.get(name).decode("utf-8")
-print("{} was called {} times:".format(name, calls))
-inputs = cache.lrange(name + ":inputs", 0, -1)
-outputs = cache.lrange(name + ":outputs", 0, -1)
-for i, o in zip(inputs, outputs):
-    print("{}(*{}) -> {}".format(name, i.decode('utf-8'),
-                                o.decode('utf-8')))
+def replay(fn: Callable):
+    """
+    Replays the history of a function
+    """
+    r = redis.Redis()
+    function_name = fn.__qualname__
+    value = r.get(function_name)
+    try:
+        value = int(value.decode("utf-8"))
+    except Exception:
+        value = 0
+    print("{} was called {} times:".format(function_name, value))
+    inputs = r.lrange("{}:inputs".format(function_name), 0, -1)
+    outputs = r.lrange("{}:outputs".format(function_name), 0, -1)
+    for input, output in zip(inputs, outputs):
+        try:
+            input = input.decode("utf-8")
+        except Exception:
+            input =""
+
+        try:
+            output = output.decode("utf-8")
+        except Exception:
+            output = ""
+        print("{}(*{}) -> {}".format(function_name, input, output))
+
 
 class Cache:
-"""
-this class defines methods to handle redis cache operations
-"""
+    """
+    this class defines methods to handle redis cache operations
+    """
     def __init__(self) -> None:
-        """
-        Initialize redis client
-
-        Attributtes:
+    """
+    Initialize redis client
+    Attributtes:
         self._redis (redis.Redis): redis client
-        """
-        self._redis = redis.Redis()
-        self._redis.flushdb()
+    """
+    self._redis = redis.Redis()
+    self._redis.flushdb()
 
     @count_calls
     @call_history
     def store(self, data: Union[str, bytes, int, float]) -> str:
-        """
-        Store data in redis cache
-        Args:
-            data (dict): data to store
-        Returns:
-            str: key
-        """
-        key = str(uuid.uuid4())
-        self._redis.set(key, data)
-        return key
+    """
+    Store data in redis cache
+    """
+    key = str(uuid.uuid4())
+    self._redis.set(key, data)
+    return key
 
 
-    def get(self, key: str, fn: Optional[Callable] = None)\
-            -> Union[str, bytes, int, float, None]:
+    def get(self, key: str,
+            fn: Optional[Callable] = None) -> Union[str, bytes, int, float]:
         """ Get data from redis cache"""
         data = self._redis.get(key)
-        if data is not None and fn is not None and callable(fn):
-            return fn(data)
+        if fn:
+            data = fn(data)
         return data
 
 
@@ -127,8 +131,8 @@ this class defines methods to handle redis cache operations
         Returns:
             str: data
         """
-        data = self.get(key, lambda x: x.decode('utf-8'))
-        return data
+        data = self_redis.get(key)
+        return data.decode("utf-8")
 
 
     def get_int(self, key: str) -> int:
@@ -138,5 +142,9 @@ this class defines methods to handle redis cache operations
         Returns:
             int: data
         """
-        data = self.get(key, int)
+        data = self_redis.get(key)
+        try:
+            data = int(data.decode("utf-8"0))
+        except Exception:
+            data: 0
         return data
