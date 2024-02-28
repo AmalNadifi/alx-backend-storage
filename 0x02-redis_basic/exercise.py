@@ -15,6 +15,7 @@ def count_calls(method: Callable) -> Callable:
             The decorated function
     """
     key = method.__qualname__
+
     @wraps(method)
     def wrapper(self, *args, **kwargs):
         """
@@ -59,8 +60,6 @@ def call_history(method: Callable) -> Callable:
         data = method(self, *args, **kwargs)
         self._redis.rpush(outputs, str(data))
         return data
-
-
     return wrapper
 
 
@@ -82,7 +81,7 @@ def replay(fn: Callable):
         try:
             input = input.decode("utf-8")
         except Exception:
-            input =""
+            input = ""
 
         try:
             output = output.decode("utf-8")
@@ -95,25 +94,21 @@ class Cache:
     """
     this class defines methods to handle redis cache operations
     """
-    def __init__(self) -> None:
-    """
-    Initialize redis client
-    Attributtes:
+    def __init__(self):
+        """ Initialize redis client
+        Attributtes:
         self._redis (redis.Redis): redis client
-    """
-    self._redis = redis.Redis()
-    self._redis.flushdb()
+        """
+        self._redis = redis.Redis()
+        self._redis.flushdb()
 
     @count_calls
     @call_history
     def store(self, data: Union[str, bytes, int, float]) -> str:
-    """
-    Store data in redis cache
-    """
+        """Generate a random key"""
     key = str(uuid.uuid4())
     self._redis.set(key, data)
     return key
-
 
     def get(self, key: str,
             fn: Optional[Callable] = None) -> Union[str, bytes, int, float]:
@@ -122,7 +117,6 @@ class Cache:
         if fn:
             data = fn(data)
         return data
-
 
     def get_str(self, key: str) -> str:
         """ Get data as string from redis cache
@@ -133,7 +127,6 @@ class Cache:
         """
         data = self_redis.get(key)
         return data.decode("utf-8")
-
 
     def get_int(self, key: str) -> int:
         """ Get data as integer from redis cache
