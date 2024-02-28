@@ -9,6 +9,7 @@ import time
 # Initialize Redis client
 redis_client = redis.Redis()
 
+
 def get_page(url: str) -> str:
     """
     Fetches the HTML content of a URL and caches the result
@@ -34,8 +35,10 @@ def get_page(url: str) -> str:
     redis_client.setex(url, 10, html_content)
     return html_content
 # Test the function
+
+
 if __name__ == "__main__":
-    url = "http://slowwly.robertomurray.co.uk/delay/1000/url/http://www.google.com"
+    url = "http://slowwly.robertomurray.co.uk"
     start_time = time.time()
     print(get_page(url))
     print("Time taken:", time.time() - start_time, "seconds")
