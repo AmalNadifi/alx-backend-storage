@@ -57,7 +57,7 @@ def call_history(method: Callable) -> Callable:
         """
         self._redis.rpush(inputs, str(args))
         data = method(self, *args, **kwargs)
-        self._redis.rpush(outputs, str(data)
+        self._redis.rpush(outputs, str(data))
         return data
 
 
@@ -80,8 +80,7 @@ inputs = cache.lrange(name + ":inputs", 0, -1)
 outputs = cache.lrange(name + ":outputs", 0, -1)
 for i, o in zip(inputs, outputs):
     print("{}(*{}) -> {}".format(name, i.decode('utf-8'),
-        o.decode('utf-8')))
-
+                                o.decode('utf-8')))
 
 class Cache:
 """
@@ -139,4 +138,5 @@ this class defines methods to handle redis cache operations
         Returns:
             int: data
         """
-        data = self
+        data = self.get(key, int)
+        return data
